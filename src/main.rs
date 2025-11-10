@@ -6,12 +6,15 @@ use serde_json::from_reader;
 use shuttle_actix_web::ShuttleActixWeb;
 use std::path::Path;
 mod path;
+
+// Import some functions from webpages.rs
 mod webpages;
+use crate::webpages::{find_room, find_room_loc};
 use webpages::{
     about, css_handler, directions, editor, home_page, image, input, save, schedule_handle,
 };
 
-use crate::webpages::{find_room, find_room_loc};
+// Create a Node struct
 #[derive(Debug, Deserialize, Serialize, Clone)]
 struct Node {
     x: f64,
@@ -26,6 +29,7 @@ struct Node {
     previous: Option<usize>,
 }
 
+// Simple file utility
 mod file_utils {
     use super::{from_reader, Node, Path};
     use std::fs::File;
@@ -36,10 +40,12 @@ mod file_utils {
     }
 }
 
+// For pathfinding
 mod pathfinding {
     use super::Node;
     use std::f64;
 
+    // 
     pub fn time_path(start_id: usize, end_id: usize, nodes: &mut [Node]) -> Vec<usize> {
         initialize_nodes(nodes, start_id);
         let mut unvisited_nodes: Vec<usize> = (0..nodes.len()).collect();
@@ -105,6 +111,7 @@ fn reset_nodes(nodes: &mut [Node]) {
     }
 }
 
+// Searches for a name of a room and returns a node for it, if it exists
 fn name_to_id(name: &str, nodes: &[Node]) -> Result<usize, String> {
     nodes
         .iter()
@@ -115,6 +122,7 @@ fn name_to_id(name: &str, nodes: &[Node]) -> Result<usize, String> {
             format!("Could not identify a node for string '{name}'").to_string()
         })
 }
+// Searches for multiple room names and returns the node of each
 fn name_to_ids<'a>(name: &str, nodes: &'a [Node]) -> Vec<&'a Node> {
     let res = nodes
         .iter()
@@ -123,6 +131,7 @@ fn name_to_ids<'a>(name: &str, nodes: &'a [Node]) -> Vec<&'a Node> {
 
     res
 }
+
 
 fn closest_pair_between(
     start_name: &str,
@@ -146,6 +155,7 @@ fn closest_pair_between(
         .map(|(_, sid, eid)| (sid, eid))
 }
 
+// Primary website router
 #[shuttle_runtime::main]
 async fn main() -> ShuttleActixWeb<impl FnOnce(&mut ServiceConfig) + Send + Clone + 'static> {
     let config = move |cfg: &mut web::ServiceConfig| {

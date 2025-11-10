@@ -1,19 +1,40 @@
 //as an example, below is a schedule that could be entered in by the user,
 /*
-Y24-25 Semester 1
-Exp    Trm    Crs-Sec    Course Name    Teacher    Room    Enroll    Leave
-2(A,C-D)    S1    ENG201b-1    Literary Explorations III: British    Townsend, Tracy A    A113    08/19/2024    01/19/2025
-4(A-D)    S1    FAR110-1    Wind Ensemble    McCarthy, Mary Beth C    D107    08/19/2024    01/19/2025
-5(A-B,D)    S1    HSS201b-3    Conflict in World History    Eysturlid, Lee    A147    08/19/2024    01/19/2025
-6(A-D)    S1    WLG250-101    Spanish V    Kaluza, Marta J    A131    08/19/2024    01/19/2025
-7(A-D)    S1    MAT473-2    Linear Algebra    Brummet, Evan    A135    08/19/2024    01/19/2025
-8(A-D)    S1    MAT474-1    Abstract Algebra    Fogel, Micah    A155    08/19/2024    01/19/2025
+Y25-26 Semester 1
+Exp 	Trm 	Crs-Sec 	Course Name 	Teacher 	Room 	Enroll 	Leave
+1-2(A,C) 	S1 	SCI603-1 	Biology: Molecular & Cellular 	O'Leary-Driscoll, Sarah 	B108 	08/04/2025 	01/05/2026
+3(A-D) 	S1 	MAT331-1 	BC Calculus III 	Trimm, Anderson 	A135 	08/04/2025 	01/05/2026
+4(A-D) 	S1 	CS255-2 	Elements of Computing Systems 1 	Campbell, Dan K. 	A152 	08/04/2025 	01/05/2026
+5(A-B,D) 	S1 	ENG201a-2 	Literary Explorations III: American 	Kotlarczyk, Adam C 	A119 	08/04/2025 	01/05/2026
+6(A-D) 	S1 	SCI445-2 	Modern Physics 	Hawker, Eric 	B115 	08/04/2025 	01/05/2026
+SE(A-D) 	S1 	SE001-101 	Support & Engagement 	Staff, New 	N/A 	08/18/2025 	01/05/2026
+7(A-B, D) 	S1 	HSS201i-2 	Revolutions 	Buck, Patrick D. 	A114 	08/04/2025 	01/05/2026
+8(A-D) 	S1 	WLG150-101 	French V 	Kwiatkowski, Anne 	A121 	08/04/2025 	01/05/2026
+RC(A-Sp) 	Y25-26 	SLD130-7 	Rolling Check 	Staff, Residential Life 		08/18/2025 	06/16/2026
+CC(A-Sp) 	Y25-26 	SLD120-7 	Curfew Check 	Staff, Residential Life 		08/18/2025 	06/16/2026
+SIR(I) 	S1 	SIR099-999 	SIR 	Staff, SIR 	B131 	08/04/2025 	01/05/2026
+EVE(A-Sp) 	Y25-26 	SLD100-28 	Residential Life 	Brown, Tyson 		08/18/2025 	06/16/2026
+
+Y25-26 Semester 2
+Exp 	Trm 	Crs-Sec 	Course Name 	Teacher 	Room 	Enroll 	Leave
+1(A-B,D) 	S2 	HSS202-1 	The World in the Twentieth Century 	Eysturlid, Lee 	A147 	01/05/2026 	06/16/2026
+2(A,C-D) 	S2 	WEL312-1 	Dance 	Myers, Mary Jane 	F100A 	01/05/2026 	06/16/2026
+3(A-D) 	S2 	CS260-1 	Elements of Computing Systems 2 	Campbell, Dan K. 	A133 	01/05/2026 	06/16/2026
+4(A-D) 	S2 	SCI425-1 	Planetary Science 	Hawker, Eric 	B115 	01/05/2026 	06/16/2026
+5(A-B,D) 	S2 	ENG341-4 	Gender Studies 	Ott, Ashley 	A117 	01/05/2026 	06/16/2026
+SE(A-D) 	S2 	SE001-201 	Support & Engagement 	Staff, New 	N/A 	01/05/2026 	06/16/2026
+7(A-D) 	S2 	MAT442-3 	Multi-Variable Calculus 	Fogel, Micah 	A155 	01/05/2026 	06/16/2026
+8(A-D) 	S2 	WLG150-201 	French V 	Kwiatkowski, Anne 	A121 	01/05/2026 	06/16/2026
+RC(A-Sp) 	Y25-26 	SLD130-7 	Rolling Check 	Staff, Residential Life 		08/18/2025 	06/16/2026
+CC(A-Sp) 	Y25-26 	SLD120-7 	Curfew Check 	Staff, Residential Life 		08/18/2025 	06/16/2026
+EVE(A-Sp) 	Y25-26 	SLD100-28 	Residential Life 	Brown, Tyson 		08/18/2025 	06/16/2026
 */
 use lazy_static::lazy_static;
 use log::error;
 use regex::Regex;
 
 use crate::{closest_pair_between, name_to_id, pathfinding, Node};
+
 struct ScheduleInfo {
     mods: Vec<String>,
     semester: Vec<String>,
@@ -41,6 +62,8 @@ enum Day {
     I,
 }
 #[derive(Debug, PartialEq, Eq, Hash, Clone, serde::Serialize)]
+
+// Nodes can have different locations. Entrances, exits, classrooms, and Lexington.
 pub enum Location {
     Entrance,
     Exit,
@@ -58,6 +81,8 @@ pub struct BasicPathway {
 
 pub type FullPathway = (Vec<usize>, (Option<Class>, Option<Class>));
 
+
+// Contains all the information from Powerschool input
 #[derive(Debug, PartialEq, Eq, Hash, Clone, serde::Serialize)]
 pub struct Class {
     days: Vec<Day>,
@@ -85,12 +110,15 @@ pub enum EnterExit {
     D13,
     D6,
 }
+
+// Regular Expressions for the Powerschool input
 lazy_static! {
     static ref DAY_REGEX: Regex = Regex::new(r"^[ ABCDI,-]*$").unwrap();
     static ref MODS_REGEX: Regex = Regex::new(r"^[a-zA-Z0-9-]*$").unwrap();
     static ref CURREG_REGEX: Regex = Regex::new(r"^[\w-]+\([^()]*\)( [\w-]+\([^()]*\))*$").unwrap();
     static ref MODS_DAY_REGEX: Regex = Regex::new(r"\d+-?\d*\([^)]+\)|\d+\([^)]+\)").unwrap();
 }
+// Splits the input into two strings: one from the first and one from the second semester
 fn split_semesters(input: &str) -> (String, String) {
     let (mut sem1, mut sem2) = (Vec::new(), Vec::new());
     let mut in_sem2 = false;
@@ -109,6 +137,7 @@ fn split_semesters(input: &str) -> (String, String) {
     (sem1.join("\n"), sem2.join("\n"))
 }
 
+// Takes the user input and resolves both semesters, returning them
 pub fn get_schedule(input: &str) -> (Result<Vec<Class>, String>, Result<Vec<Class>, String>) {
     let (sem1, sem2) = split_semesters(input);
     if sem1.is_empty() && sem2.is_empty() {
@@ -130,6 +159,7 @@ pub fn get_schedule(input: &str) -> (Result<Vec<Class>, String>, Result<Vec<Clas
     (resolve_semester(&sem1), resolve_semester(&sem2))
 }
 
+// Convert the values of a single semester string into a operable structure
 fn resolve_semester(input: &str) -> Result<Vec<Class>, String> {
     let mut listvec: Vec<&str> = input
         .lines()
@@ -140,11 +170,11 @@ fn resolve_semester(input: &str) -> Result<Vec<Class>, String> {
     if listvec.len() <= 2 {
         return Err("Not enough lines".to_owned());
     }
-
+    // Cut out RC/CC/SIR etc entries
     listvec.retain(|line| {
         !line.trim().is_empty() && !line.starts_with("RC") && !line.starts_with("CC") && !line.starts_with("SIR") &&  !line.starts_with("EVE")
     });
-
+    // Vector for each mod/semester/name/etc
     let (
         mut mods,
         mut semester,
@@ -164,7 +194,7 @@ fn resolve_semester(input: &str) -> Result<Vec<Class>, String> {
         Vec::new(),
         Vec::new(),
     );
-
+    // For each of the class values:
     for (num, line) in listvec.into_iter().enumerate() {
         let line = line.replace("    ", "\t");
         let split: Vec<String> = line
@@ -176,6 +206,7 @@ fn resolve_semester(input: &str) -> Result<Vec<Class>, String> {
         if roomche.contains("/") {
             roomche = roomche.split('/').collect::<Vec<&str>>()[0].to_owned();
         }
+        // Add to the info list
         if split.len() == 8 {
             mods.push(split[0].clone());
             semester.push(split[1].clone());
@@ -189,7 +220,7 @@ fn resolve_semester(input: &str) -> Result<Vec<Class>, String> {
             return Err(format!("Not enough arguments provided in line {num}"));
         }
     }
-
+    // Now we have the info for the classes and such
     sort_by_day(&ScheduleInfo {
         mods,
         semester,
